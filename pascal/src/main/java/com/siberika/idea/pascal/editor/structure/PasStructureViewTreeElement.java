@@ -1,15 +1,17 @@
 package com.siberika.idea.pascal.editor.structure;
 
-import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasEntityScope;
 import com.siberika.idea.pascal.lang.psi.PascalNamedElement;
 import com.siberika.idea.pascal.lang.psi.PascalStructType;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.PsiUtil;
+import consulo.annotation.access.RequiredReadAction;
 import consulo.fileEditor.structureView.StructureViewTreeElement;
 import consulo.language.editor.structureView.PsiTreeElementBase;
 import consulo.language.psi.PsiElement;
 import consulo.language.psi.PsiFile;
+import consulo.localize.LocalizeValue;
+import consulo.platform.base.icon.PlatformIconGroup;
 import consulo.ui.image.Image;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,11 +21,12 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Author: George Bakhtadze
- * Date: 16/09/2013
+ * @author George Bakhtadze
+ * @since 2013-09-16
  */
 public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> implements StructureViewTreeElement {
     private final PasField field;
+
     protected PasStructureViewTreeElement(PsiElement psiElement, PasField field) {
         super(field != null ? field.getElement() : psiElement);
         this.field = field;
@@ -48,10 +51,12 @@ public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> 
                     PascalStructType structType = PasStructStructureTreeElement.getStructElement(field);
                     if (structType != null) {
                         res.add(new PasStructStructureTreeElement(structType));
-                    } else {
+                    }
+                    else {
                         res.add(new PasStructureViewTreeElement(field.getElement(), field));
                     }
-                } else {
+                }
+                else {
                     res.add(new PasStructureViewTreeElement(field.getElement(), field));
                 }
             }
@@ -64,34 +69,35 @@ public class PasStructureViewTreeElement extends PsiTreeElementBase<PsiElement> 
     }
 
     @Override
+    @RequiredReadAction
     public Image getIcon() {
         if (field != null) {
             if (field.fieldType == PasField.FieldType.VARIABLE) {
-                return PascalIcons.VARIABLE;
-            } else if (field.fieldType == PasField.FieldType.CONSTANT) {
-                return PascalIcons.CONSTANT;
-            } else if (field.fieldType == PasField.FieldType.TYPE) {
-                return PascalIcons.TYPE;
-            } else if (field.fieldType == PasField.FieldType.PROPERTY) {
-                return PascalIcons.PROPERTY;
-            } else if (field.fieldType == PasField.FieldType.ROUTINE) {
-                return PascalIcons.ROUTINE;
+                return PlatformIconGroup.nodesVariable();
+            }
+            else if (field.fieldType == PasField.FieldType.CONSTANT) {
+                return PlatformIconGroup.nodesConstant();
+            }
+            else if (field.fieldType == PasField.FieldType.TYPE) {
+                return PlatformIconGroup.nodesType();
+            }
+            else if (field.fieldType == PasField.FieldType.PROPERTY) {
+                return PlatformIconGroup.nodesProperty();
+            }
+            else if (field.fieldType == PasField.FieldType.ROUTINE) {
+                return PlatformIconGroup.nodesFunction();
             }
         }
         return super.getIcon();
     }
 
-    @Nullable
     @Override
-    public String getPresentableText() {
-        PsiElement element = getElement();
-        if (element instanceof PascalNamedElement) {
-            return PsiUtil.getFieldName((PascalNamedElement) element);
-        } else if (element instanceof PsiFile) {
-            return ((PsiFile) element).getName();
-        } else {
-            return "-";
-        }
+    @RequiredReadAction
+    public LocalizeValue getPresentableText() {
+        return switch (getElement()) {
+            case PascalNamedElement namedElem -> LocalizeValue.of(PsiUtil.getFieldName(namedElem));
+            case PsiFile file -> LocalizeValue.of(file.getName());
+            case null, default -> LocalizeValue.localizeTODO("-");
+        };
     }
-
 }

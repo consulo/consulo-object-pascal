@@ -1,19 +1,21 @@
 package com.siberika.idea.pascal.editor.structure;
 
-import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.PasModule;
+import consulo.annotation.access.RequiredReadAction;
 import consulo.fileEditor.structureView.StructureViewTreeElement;
 import consulo.language.editor.structureView.PsiTreeElementBase;
+import consulo.localize.LocalizeValue;
+import consulo.object.pascal.icon.ObjectPascalIconGroup;
 import consulo.ui.image.Image;
 import consulo.util.lang.StringUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 
 /**
- * Author: George Bakhtadze
- * Date: 06/05/2015
+ * @author George Bakhtadze
+ * @since 2015-05-06
  */
 public class PasModuleStructureTreeElement extends PsiTreeElementBase<PasModule> {
     protected PasModuleStructureTreeElement(PasModule psiElement) {
@@ -22,33 +24,31 @@ public class PasModuleStructureTreeElement extends PsiTreeElementBase<PasModule>
 
     @NotNull
     @Override
+    @RequiredReadAction
     public Collection<StructureViewTreeElement> getChildrenBase() {
         return PasStructureViewTreeElement.collectChildren(getElement());
     }
 
     @Override
-    public Image getIcon() {
+    @RequiredReadAction
+    public @Nullable Image getIcon() {
         if (getElement() != null) {
-            switch (getElement().getModuleType()) {
-                case PACKAGE:
-                case LIBRARY:
-                    return PascalIcons.FILE_LIBRARY;
-                case PROGRAM:
-                    return PascalIcons.FILE_PROGRAM;
-                case UNIT:
-                    return PascalIcons.UNIT;
-            }
+            return switch (getElement().getModuleType()) {
+                case PACKAGE, LIBRARY -> ObjectPascalIconGroup.library();
+                case PROGRAM -> ObjectPascalIconGroup.program();
+                case UNIT -> ObjectPascalIconGroup.unit();
+            };
         }
         return null;
     }
 
-    @Nullable
     @Override
-    public String getPresentableText() {
+    @RequiredReadAction
+    public LocalizeValue getPresentableText() {
         String name = getElement() != null ? getElement().getName() : "-";
         if (StringUtil.isEmpty(name)) {
             name = getElement().getContainingFile().getName();
         }
-        return name;
+        return LocalizeValue.of(name);
     }
 }

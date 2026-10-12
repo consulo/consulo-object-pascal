@@ -1,20 +1,22 @@
 package com.siberika.idea.pascal.editor.structure;
 
-import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.lang.psi.*;
 import com.siberika.idea.pascal.lang.psi.impl.PasField;
 import com.siberika.idea.pascal.util.PsiUtil;
+import consulo.annotation.access.RequiredReadAction;
 import consulo.fileEditor.structureView.StructureViewTreeElement;
 import consulo.language.editor.structureView.PsiTreeElementBase;
+import consulo.localize.LocalizeValue;
+import consulo.object.pascal.icon.ObjectPascalIconGroup;
+import consulo.platform.base.icon.PlatformIconGroup;
 import consulo.ui.image.Image;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
 /**
- * Author: George Bakhtadze
- * Date: 06/05/2015
+ * @author George Bakhtadze
+ * @since 2015-05-06
  */
 public class PasStructStructureTreeElement extends PsiTreeElementBase<PascalStructType> {
     protected PasStructStructureTreeElement(PascalStructType psiElement) {
@@ -23,33 +25,28 @@ public class PasStructStructureTreeElement extends PsiTreeElementBase<PascalStru
 
     @NotNull
     @Override
+    @RequiredReadAction
     public Collection<StructureViewTreeElement> getChildrenBase() {
         return PasStructureViewTreeElement.collectChildren(getElement());
     }
 
     @Override
+    @RequiredReadAction
     public Image getIcon() {
-        if (getElement() != null) {
-            PascalStructType el = getElement();
-            if (el instanceof PasInterfaceTypeDecl) {
-                return PascalIcons.INTERFACE;
-            } else if (el instanceof PasClassTypeDecl) {
-                return PascalIcons.CLASS;
-            } else if (el instanceof PasObjectDecl) {
-                return PascalIcons.OBJECT;
-            } else if (el instanceof PasRecordDecl) {
-                return PascalIcons.RECORD;
-            } else if ((el instanceof PasClassHelperDecl) || (el instanceof PasRecordHelperDecl)) {
-                return PascalIcons.HELPER;
-            }
-        }
-        return null;
+        return switch (getElement()) {
+            case PasInterfaceTypeDecl _ -> PlatformIconGroup.nodesInterface();
+            case PasClassTypeDecl _ -> PlatformIconGroup.nodesClass();
+            case PasObjectDecl _ -> PlatformIconGroup.nodesAnonymousclass();
+            case PasRecordDecl _ -> PlatformIconGroup.nodesRecord();
+            case PasClassHelperDecl _, PasRecordHelperDecl _ -> ObjectPascalIconGroup.helper();
+            case null, default -> null;
+        };
     }
 
-    @Nullable
     @Override
-    public String getPresentableText() {
-        return getElement() != null ? getElement().getName() : "-";
+    @RequiredReadAction
+    public LocalizeValue getPresentableText() {
+        return getElement() != null ? LocalizeValue.of(getElement().getName()) : LocalizeValue.localizeTODO("-");
     }
 
     public static PascalStructType getStructElement(PasField field) {
@@ -57,15 +54,20 @@ public class PasStructStructureTreeElement extends PsiTreeElementBase<PascalStru
         if (typeDecl != null) {
             if (typeDecl.getInterfaceTypeDecl() != null) {
                 return typeDecl.getInterfaceTypeDecl();
-            } if (typeDecl.getClassTypeDecl() != null) {
+            }
+            if (typeDecl.getClassTypeDecl() != null) {
                 return typeDecl.getClassTypeDecl();
-            } if (typeDecl.getObjectDecl() != null) {
+            }
+            if (typeDecl.getObjectDecl() != null) {
                 return typeDecl.getObjectDecl();
-            } if (typeDecl.getRecordDecl() != null) {
+            }
+            if (typeDecl.getRecordDecl() != null) {
                 return typeDecl.getRecordDecl();
-            } if (typeDecl.getClassHelperDecl() != null) {
+            }
+            if (typeDecl.getClassHelperDecl() != null) {
                 return typeDecl.getClassHelperDecl();
-            } if (typeDecl.getRecordHelperDecl() != null) {
+            }
+            if (typeDecl.getRecordHelperDecl() != null) {
                 return typeDecl.getRecordHelperDecl();
             }
         }
