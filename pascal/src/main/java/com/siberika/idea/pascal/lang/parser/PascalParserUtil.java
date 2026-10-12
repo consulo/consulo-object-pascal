@@ -1,6 +1,5 @@
 package com.siberika.idea.pascal.lang.parser;
 
-import com.siberika.idea.pascal.PascalIcons;
 import com.siberika.idea.pascal.PascalRTException;
 import com.siberika.idea.pascal.lang.compiled.CompiledFileImpl;
 import com.siberika.idea.pascal.lang.psi.*;
@@ -11,27 +10,30 @@ import com.siberika.idea.pascal.lang.references.ResolveUtil;
 import com.siberika.idea.pascal.lang.stub.PasIdentStub;
 import com.siberika.idea.pascal.sdk.BuiltinsParser;
 import com.siberika.idea.pascal.util.PsiUtil;
+import consulo.annotation.access.RequiredReadAction;
 import consulo.language.impl.parser.GeneratedParserUtilBase;
 import consulo.language.parser.PsiBuilder;
 import consulo.language.psi.PsiElement;
 import consulo.language.psi.PsiFile;
 import consulo.language.psi.util.PsiTreeUtil;
-import consulo.language.util.ModuleUtilCore;
+import consulo.localize.LocalizeValue;
 import consulo.logging.Logger;
 import consulo.module.Module;
 import consulo.navigation.ItemPresentation;
+import consulo.object.pascal.icon.ObjectPascalIconGroup;
+import consulo.platform.base.icon.PlatformIconGroup;
 import consulo.project.Project;
 import consulo.ui.image.Image;
 import consulo.util.lang.StringUtil;
 import consulo.virtualFileSystem.VirtualFile;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
 /**
- * Author: George Bakhtadze
- * Date: 12/9/12
+ * @author George Bakhtadze
+ * @since 2012-12-09
  */
 @SuppressWarnings("unchecked")
 public class PascalParserUtil extends GeneratedParserUtilBase {
@@ -49,7 +51,8 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
                 if (!name.startsWith("test") && !name.startsWith("$")) {
 //                    throw new PascalRTException("===*** Parse: " + name);
                 }
-            } catch (PascalRTException e) {
+            }
+            catch (PascalRTException e) {
 //                e.printStackTrace();
 //                System.out.println(e.getMessage());
             }
@@ -65,9 +68,17 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             if (innerSection == outerSection) {
                 return true;
             }
-            if ((null == innerSection) || PsiUtil.isInstanceOfAny(innerSection,
-                    PasClassTypeDecl.class, PasClassHelperDecl.class, PasInterfaceTypeDecl.class, PasObjectDecl.class, PasRecordDecl.class, PasRecordHelperDecl.class,
-                    PasClosureExpr.class, PascalRoutine.class)) {
+            if ((null == innerSection) || PsiUtil.isInstanceOfAny(
+                innerSection,
+                PasClassTypeDecl.class,
+                PasClassHelperDecl.class,
+                PasInterfaceTypeDecl.class,
+                PasObjectDecl.class,
+                PasRecordDecl.class,
+                PasRecordHelperDecl.class,
+                PasClosureExpr.class,
+                PascalRoutine.class
+            )) {
                 return false;
             }
             innerSection = PsiUtil.getNearestAffectingDeclarationsRoot(innerSection);
@@ -77,13 +88,15 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     /**
      * add used unit interface declarations to result
-     * @param result list of declarations to add unit declarations to
+     *
+     * @param result  list of declarations to add unit declarations to
      * @param current element which should be affected by a unit declaration in order to be added to result
      */
+    @RequiredReadAction
     @SuppressWarnings("ConstantConditions")
     private static void addUsedUnitDeclarations(Collection<PascalNamedElement> result, PsiElement current, String name) {
         PsiFile file = current.getContainingFile();
-        Module module = ModuleUtilCore.findModuleForPsiElement(current);
+        Module module = current.getModule();
         List<VirtualFile> unitFiles = PasReferenceUtil.findUnitFiles(current.getProject(), module);
         for (PascalQualifiedIdent usedUnitName : PsiUtil.getUsedUnits(PsiUtil.getModuleInterfaceUsesClause(file))) {
             addUnitDeclarations(result, current.getProject(), unitFiles, usedUnitName.getName(), name);
@@ -96,7 +109,14 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         }
     }
 
-    private static void addUnitDeclarations(Collection<PascalNamedElement> result, Project project, List<VirtualFile> unitFiles, String unitName, String name) {
+    @RequiredReadAction
+    private static void addUnitDeclarations(
+        Collection<PascalNamedElement> result,
+        Project project,
+        List<VirtualFile> unitFiles,
+        String unitName,
+        String name
+    ) {
         PascalNamedElement usedUnit = PasReferenceUtil.findUnit(project, unitFiles, unitName);
         if (usedUnit != null) {
             addDeclarations(result, PsiUtil.getModuleInterfaceSection(usedUnit), name);
@@ -105,29 +125,40 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     /**
      * Add all declarations of entities with matching names from the specified section to result
-     * @param result list of declarations to add declarations to
+     *
+     * @param result  list of declarations to add declarations to
      * @param section section containing declarations
-     * @param name name which a declaration should match
+     * @param name    name which a declaration should match
      */
+    @RequiredReadAction
     private static void addDeclarations(Collection<PascalNamedElement> result, PsiElement section, String name) {
         if (section != null) {
-            result.addAll(retrieveEntitiesFromSection(section, name, getEndOffset(section),
-                    PasNamedIdent.class, PasNamedIdentDecl.class, PasGenericTypeIdent.class, PasNamespaceIdent.class));
+            result.addAll(retrieveEntitiesFromSection(
+                section,
+                name,
+                getEndOffset(section),
+                PasNamedIdent.class,
+                PasNamedIdentDecl.class,
+                PasGenericTypeIdent.class,
+                PasNamespaceIdent.class
+            ));
         }
     }
 
+    @RequiredReadAction
     private static int getEndOffset(PsiElement section) {
         return section != null ? section.getTextRange().getEndOffset() : -1;
     }
 
     /**
      * Returns type scope from type declaration in type section
-     * @param typeIdent         name of declaring type
-     * @param recursionCount    to prevent infinite recursion
-     * @return                  scope if type is structured
+     *
+     * @param typeIdent      name of declaring type
+     * @param recursionCount to prevent infinite recursion
+     * @return scope if type is structured
      */
-    @Nullable
-    public static PasEntityScope getStructTypeByIdent(@NotNull PascalNamedElement typeIdent, int recursionCount) {
+    @RequiredReadAction
+    public static @Nullable PasEntityScope getStructTypeByIdent(@NotNull PascalNamedElement typeIdent, int recursionCount) {
         if (recursionCount > MAX_STRUCT_TYPE_RESOLVE_RECURSION) {
             return PsiUtil.getElementPasModule(typeIdent);
         }
@@ -142,7 +173,8 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
             PasEntityScope strucTypeDecl = PsiTreeUtil.findChildOfType(typeDecl, PasEntityScope.class, true);
             if (strucTypeDecl != null) {   // structured type
                 return strucTypeDecl;
-            } else {                       // regular type
+            }
+            else {                       // regular type
                 PasFullyQualifiedIdent typeId = PsiTreeUtil.findChildOfType(typeDecl, PasFullyQualifiedIdent.class, true);
                 return getStructTypeByTypeIdent(typeId, recursionCount);
             }
@@ -150,12 +182,12 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
         return null;
     }
 
-    @Nullable
-    private static PasEntityScope getStructTypeByTypeIdent(@Nullable PascalQualifiedIdent typeId, int recursionCount) {
+    @RequiredReadAction
+    private static @Nullable PasEntityScope getStructTypeByTypeIdent(@Nullable PascalQualifiedIdent typeId, int recursionCount) {
         if (typeId != null) {
             PsiElement section = PsiUtil.getNearestAffectingDeclarationsRoot(typeId);
-            Collection<PascalNamedElement> entities = retrieveEntitiesFromSection(section, typeId.getName(),
-                    getEndOffset(section), PasGenericTypeIdent.class);
+            Collection<PascalNamedElement> entities =
+                retrieveEntitiesFromSection(section, typeId.getName(), getEndOffset(section), PasGenericTypeIdent.class);
             addUsedUnitDeclarations(entities, typeId, typeId.getName());
             for (PascalNamedElement element : entities) {
                 return getStructTypeByIdent(element, recursionCount + 1);
@@ -165,12 +197,19 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
     }
 
     @NotNull
-    private static <T extends PascalNamedElement> Collection<PascalNamedElement> retrieveEntitiesFromSection(PsiElement section, String key, int maxOffset, Class<? extends T>...classes) {
-        final Set<PascalNamedElement> result = new LinkedHashSet<PascalNamedElement>();
+    @RequiredReadAction
+    private static <T extends PascalNamedElement> Collection<PascalNamedElement> retrieveEntitiesFromSection(
+        PsiElement section,
+        String key,
+        int maxOffset,
+        Class<? extends T>... classes
+    ) {
+        final Set<PascalNamedElement> result = new LinkedHashSet<>();
         if (section != null) {
             for (PascalNamedElement namedElement : PsiTreeUtil.findChildrenOfAnyType(section, classes)) {
-                if (((null == key) || key.equalsIgnoreCase(namedElement.getName()))) {
-                    if ((namedElement.getTextRange().getStartOffset() < maxOffset) && isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
+                if (null == key || key.equalsIgnoreCase(namedElement.getName())) {
+                    if (namedElement.getTextRange().getStartOffset() < maxOffset
+                        && isSameAffectingScope(PsiUtil.getNearestAffectingDeclarationsRoot(namedElement), section)) {
                         result.remove(namedElement);
                         result.add(namedElement);
                     }
@@ -183,113 +222,143 @@ public class PascalParserUtil extends GeneratedParserUtilBase {
 
     public static ItemPresentation getPresentation(final PascalNamedElement element) {
         return new ItemPresentation() {
-            @Nullable
             @Override
-            public String getPresentableText() {
-                if ((element instanceof PascalRoutine) && (isASTAvailable(element))) {
-                    return element.getText();
+            @RequiredReadAction
+            public LocalizeValue getPresentableText() {
+                if (element instanceof PascalRoutine && isASTAvailable(element)) {
+                    return LocalizeValue.of(element.getText());
                 }
                 String typeString = "";
-                if (element instanceof PascalIdentDecl) {
-                    typeString = ((PascalIdentDecl) element).getTypeString();
+                if (element instanceof PascalIdentDecl idDecl) {
+                    typeString = idDecl.getTypeString();
                     if (!StringUtil.isEmpty(typeString)) {
                         typeString = ": " + typeString;
                     }
                 }
-                return ResolveUtil.cleanupName(element.getName()) + typeString;
+                return LocalizeValue.of(ResolveUtil.cleanupName(element.getName()) + typeString);
             }
 
-            @Nullable
             @Override
-            public String getLocationString() {
+            @RequiredReadAction
+            public @Nullable String getLocationString() {
                 return getType(element) + (element.getContainingFile() != null ? element.getContainingFile().getName() : "-");
             }
 
-            @Nullable
             @Override
-            public Image getIcon(boolean unused) {
-                if (element instanceof PascalIdentDeclImpl) {
-                    PasIdentStub stub = ((PascalIdentDeclImpl) element).retrieveStub();
+            public @Nullable Image getIcon(boolean unused) {
+                if (element instanceof PascalIdentDeclImpl idDecl) {
+                    PasIdentStub stub = idDecl.retrieveStub();
                     PasField.FieldType type = stub != null ? stub.getType() : PsiUtil.getFieldType(element);
                     switch (type) {
-                        case VARIABLE: return PascalIcons.VARIABLE;
-                        case TYPE: return PascalIcons.TYPE;
-                        case CONSTANT: return PascalIcons.CONSTANT;
-                        case ROUTINE: return PascalIcons.ROUTINE;
-                    }
-                } else if (element instanceof PasClassTypeDecl) {
-                    return PascalIcons.CLASS;
-                } else if (element instanceof PasRecordDecl) {
-                    return PascalIcons.RECORD;
-                } else if (element instanceof PasInterfaceTypeDecl) {
-                    return PascalIcons.INTERFACE;
-                } else if (element instanceof PasObjectDecl) {
-                    return PascalIcons.OBJECT;
-                } else if (element instanceof PascalRoutine) {
-                    return PascalIcons.ROUTINE;
-                } else if (element instanceof PasGenericTypeIdent) {
-                    return PascalIcons.TYPE;
-                } else if (element instanceof PascalVariableDeclaration) {
-                    return PascalIcons.VARIABLE;
-                } else if (element instanceof PasConstDeclaration) {
-                    return PascalIcons.CONSTANT;
-                } else if ((element instanceof PasClassProperty) || (element.getParent() instanceof PasClassProperty)) {
-                    return PascalIcons.PROPERTY;
-                } else if (element instanceof PasModule) {
-                    PascalModule.ModuleType moduleType = ((PasModule) element).getModuleType();
-                    if (moduleType == PascalModule.ModuleType.PROGRAM) {
-                        return PascalIcons.FILE_PROGRAM;
-                    } else if (moduleType == PascalModule.ModuleType.LIBRARY) {
-                        return PascalIcons.FILE_LIBRARY;
-                    } else {
-                        return PascalIcons.UNIT;
+                        case VARIABLE:
+                            return PlatformIconGroup.nodesVariable();
+                        case TYPE:
+                            return PlatformIconGroup.nodesType();
+                        case CONSTANT:
+                            return PlatformIconGroup.nodesConstant();
+                        case ROUTINE:
+                            return PlatformIconGroup.nodesFunction();
                     }
                 }
-                return PascalIcons.GENERAL;
+                else if (element instanceof PasClassTypeDecl) {
+                    return PlatformIconGroup.nodesClass();
+                }
+                else if (element instanceof PasRecordDecl) {
+                    return PlatformIconGroup.nodesRecord();
+                }
+                else if (element instanceof PasInterfaceTypeDecl) {
+                    return PlatformIconGroup.nodesInterface();
+                }
+                else if (element instanceof PasObjectDecl) {
+                    return PlatformIconGroup.nodesAnonymousclass();
+                }
+                else if (element instanceof PascalRoutine) {
+                    return PlatformIconGroup.nodesFunction();
+                }
+                else if (element instanceof PasGenericTypeIdent) {
+                    return PlatformIconGroup.nodesType();
+                }
+                else if (element instanceof PascalVariableDeclaration) {
+                    return PlatformIconGroup.nodesVariable();
+                }
+                else if (element instanceof PasConstDeclaration) {
+                    return PlatformIconGroup.nodesConstant();
+                }
+                else if (element instanceof PasClassProperty || element.getParent() instanceof PasClassProperty) {
+                    return PlatformIconGroup.nodesProperty();
+                }
+                else if (element instanceof PasModule module) {
+                    PascalModule.ModuleType moduleType = module.getModuleType();
+                    if (moduleType == PascalModule.ModuleType.PROGRAM) {
+                        return ObjectPascalIconGroup.program();
+                    }
+                    else if (moduleType == PascalModule.ModuleType.LIBRARY) {
+                        return ObjectPascalIconGroup.library();
+                    }
+                    else {
+                        return ObjectPascalIconGroup.unit();
+                    }
+                }
+                return ObjectPascalIconGroup.pascal();
             }
         };
     }
 
     private static boolean isASTAvailable(PascalNamedElement element) {
-        return (!(element.getContainingFile() instanceof CompiledFileImpl));
+        return !(element.getContainingFile() instanceof CompiledFileImpl);
     }
 
-    private static String getType(PascalNamedElement item) {
-        if (item instanceof PascalIdentDeclImpl) {
-            PasIdentStub stub = ((PascalIdentDeclImpl) item).retrieveStub();
+    private static LocalizeValue getType(PascalNamedElement item) {
+        if (item instanceof PascalIdentDeclImpl idDecl) {
+            PasIdentStub stub = idDecl.retrieveStub();
             PasField.FieldType type = stub != null ? stub.getType() : PsiUtil.getFieldType(item);
             switch (type) {
-                case VARIABLE: return "[var] ";
-                case TYPE: return "[type] ";
-                case CONSTANT: return "[const] ";
-                case ROUTINE: return "[routine] ";
+                case VARIABLE:
+                    return LocalizeValue.localizeTODO("[var] ");
+                case TYPE:
+                    return LocalizeValue.localizeTODO("[type] ");
+                case CONSTANT:
+                    return LocalizeValue.localizeTODO("[const] ");
+                case ROUTINE:
+                    return LocalizeValue.localizeTODO("[routine] ");
             }
-        } else if (item instanceof PasClassTypeDecl) {
-            return "[class] ";
-        } else if (item instanceof PasInterfaceTypeDecl) {
-            return "[interface] ";
-        } else if (item instanceof PasRecordDecl) {
-            return "[record] ";
-        } else if (item instanceof PasObjectDecl) {
-            return "[object] ";
-        } else if (item instanceof PascalRoutine) {
-            return "[routine] ";
-        } else if (item instanceof PasClassHelperDecl) {
-            return "[class helper] ";
-        } else if (item instanceof PasRecordHelperDecl) {
-            return "[record helper] ";
-        } else if (item instanceof PasVarDeclaration) {
-            return "[var] ";
-        } else if (item instanceof PasClassField) {
-            return "[field] ";
-        } else if (item instanceof PasConstDeclaration) {
-            return "[const] ";
-        } else if (item instanceof PasTypeDecl) {
-            return "[type] ";
-        } else if (item instanceof PasClassProperty) {
-            return "[property] ";
         }
-        return "";
+        else if (item instanceof PasClassTypeDecl) {
+            return LocalizeValue.localizeTODO("[class] ");
+        }
+        else if (item instanceof PasInterfaceTypeDecl) {
+            return LocalizeValue.localizeTODO("[interface] ");
+        }
+        else if (item instanceof PasRecordDecl) {
+            return LocalizeValue.localizeTODO("[record] ");
+        }
+        else if (item instanceof PasObjectDecl) {
+            return LocalizeValue.localizeTODO("[object] ");
+        }
+        else if (item instanceof PascalRoutine) {
+            return LocalizeValue.localizeTODO("[routine] ");
+        }
+        else if (item instanceof PasClassHelperDecl) {
+            return LocalizeValue.localizeTODO("[class helper] ");
+        }
+        else if (item instanceof PasRecordHelperDecl) {
+            return LocalizeValue.localizeTODO("[record helper] ");
+        }
+        else if (item instanceof PasVarDeclaration) {
+            return LocalizeValue.localizeTODO("[var] ");
+        }
+        else if (item instanceof PasClassField) {
+            return LocalizeValue.localizeTODO("[field] ");
+        }
+        else if (item instanceof PasConstDeclaration) {
+            return LocalizeValue.localizeTODO("[const] ");
+        }
+        else if (item instanceof PasTypeDecl) {
+            return LocalizeValue.localizeTODO("[type] ");
+        }
+        else if (item instanceof PasClassProperty) {
+            return LocalizeValue.localizeTODO("[property] ");
+        }
+        return LocalizeValue.empty();
     }
-
 }
