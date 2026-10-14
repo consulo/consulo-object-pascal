@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 @ExtensionImpl
 public class LazarusPackageOrderEntryTypeEditor implements CustomOrderEntryTypeEditor<LazarusPackageOrderEntryModel> {
     @Override
-    public Consumer<ColoredTextContainer> getRender(CustomOrderEntry<LazarusPackageOrderEntryModel> orderEntry, LazarusPackageOrderEntryModel model) {
+    public Consumer<ColoredTextContainer> getRenderer(CustomOrderEntry<LazarusPackageOrderEntryModel> orderEntry, LazarusPackageOrderEntryModel model) {
         return container -> {
             container.setIcon(PlatformIconGroup.nodesPplib());
             container.append(model.getPresentableName(), SimpleTextAttributes.SYNTHETIC_ATTRIBUTES);

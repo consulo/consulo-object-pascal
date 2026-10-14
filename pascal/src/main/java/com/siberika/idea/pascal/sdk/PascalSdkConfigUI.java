@@ -10,6 +10,7 @@ import consulo.application.ApplicationManager;
 import consulo.configurable.ConfigurationException;
 import consulo.content.bundle.AdditionalDataConfigurable;
 import consulo.content.bundle.Sdk;
+import consulo.disposer.Disposable;
 import consulo.document.FileDocumentManager;
 import consulo.fileChooser.FileChooserDescriptor;
 import consulo.fileChooser.FileChooserDescriptorFactory;
@@ -24,6 +25,7 @@ import consulo.project.Project;
 import consulo.project.ProjectManager;
 import consulo.ui.ex.JBColor;
 import consulo.ui.ex.awt.*;
+import consulo.ui.ex.awtUnsafe.TargetAWT;
 import consulo.virtualFileSystem.VirtualFile;
 import consulo.virtualFileSystem.event.VirtualFileEvent;
 import consulo.virtualFileSystem.event.VirtualFileListener;
@@ -51,7 +53,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
     private final Map<String, JComponent> keyComponentMap = new HashMap<String, JComponent>();
 
     @Override
-    public JComponent createComponent() {
+    public consulo.ui.Component createUIComponent(Disposable disposable) {
         JPanel panel = createGeneralOptionsPanel();
 
         keyComponentMap.clear();
@@ -62,7 +64,7 @@ public class PascalSdkConfigUI implements AdditionalDataConfigurable {
         keyComponentMap.put(PascalSdkData.Keys.DECOMPILER_COMMAND.getKey(), decompilerCommandEdit);
         keyComponentMap.put(PascalSdkData.Keys.SYNTAX_CHECK_MODE.getKey(), syntaxCheckModeCBox);
 
-        return panel;
+        return TargetAWT.wrap(panel);
     }
 
     private JPanel createGeneralOptionsPanel() {

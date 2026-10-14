@@ -29,7 +29,7 @@ public class PascalProgramParametersPanel extends CommonProgramParametersLayout<
     @Override
     protected void addAfter(FormBuilder builder) {
         ComboBox<Module> modulesComboBox = ComboBox.create(List.of(ModuleManager.getInstance(myProject).getModules()));
-        modulesComboBox.setRender((presentation, item) -> {
+        modulesComboBox.setRenderer((presentation, item) -> {
             Module module = item.getValue();
             if (module != null) {
                 presentation.withIcon(PlatformIconGroup.nodesModule());
