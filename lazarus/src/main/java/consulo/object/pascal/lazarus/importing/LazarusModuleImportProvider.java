@@ -14,6 +14,7 @@ import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
@@ -35,8 +36,8 @@ public class LazarusModuleImportProvider extends AbstractExternalModuleImportPro
     }
 
     @Override
-    public boolean canImport(File fileOrDirectory) {
-        return findProjectFile(fileOrDirectory) != null;
+    public boolean canImport(Path fileOrDirectory) {
+        return findProjectFile(fileOrDirectory.toFile()) != null;
     }
 
     @Override
